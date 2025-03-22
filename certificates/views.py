@@ -4,10 +4,15 @@ from rest_framework import status
 from .models import CertificateRequest
 from .serializers import CertuficateRequestSerializer
 from .utils import generate_certificate
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+from rest_framework.parsers import JSONParser
 
 class CertificateRequestViewSet(viewsets.ModelViewSet):
     queryset = CertificateRequest.objects.all()
     serializer_class = CertuficateRequestSerializer
+    parser_classes = [JSONParser]
 
     def create(self, request):
         data = request.data
@@ -42,3 +47,14 @@ class CertificateRequestViewSet(viewsets.ModelViewSet):
         )
 
         return Response(CertuficateRequestSerializer(cert).data, status=status.HTTP_201_CREATED)
+    
+def download_certificate(request, cert_id):
+    cert = get_object_or_404(CertificateRequest, id=cert_id)
+
+    response = HttpResponse(cert.certificate, content_type='application/x-pem-file')
+    response['Content-Disposition'] = f'attachment; filename="{cert.common_name}.crt"'
+    return response
+
+def home(request):
+    return render(request, "index.html")
+

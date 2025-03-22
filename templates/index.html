@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta name="viewport" content="width=device=width, initial-scale=1.0">
+        <title>Certigen - Generateur de certificats</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <!--<style>
+            body {font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto;}
+            input, select, button {display: block; margin: 10px 0; padding: 10px;}
+            table {width: 100%; border-collapse: collapse; margin-top: 20px;}
+            th, td{ border: 1px solid black; padding: 10px; text-align: left;}
+            th { background-color: #f2f2f2;}
+        </style>-->
+    </head>
+    <body>
+        <div class="container mt-4">
+            <h2 class="text-center">Generate a certificat</h2>
+            <form id="certForm" class="border p-4 rounded shadow">
+                <div class="mb-3">
+                    <label for="common_name" class="form-label">Domaine Name :</label>
+                    <input type="text" id="common_name" class="form-control" placeholder="domaine name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="validity_days" class="form-label">Validity (days):</label>
+                    <input type="number" id="validity_days" class="form-control" placeholder="validity" required>
+                </div>
+                <div class="mb-3">
+                    <label for="key_size" class="form-label">Key size:</label>
+                    <select id="key_size" class="form-select">
+                        <option value="2048">2048 bits</option>
+                        <option value="4096">4096 bits</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="hash_algorithm" class="form-label">Hash Algorithm:</label>
+                    <select id="hash_algorithm" class="form-select">
+                        <option value="SHA256">SHA-256</option>
+                        <option value="SHA512">SHA-512</option>
+                    </select>
+                </div>
+                <button id="generateBtn" class="btn btn-primary w-100">Generate</button>
+            </form>
+        </div>
+
+        <div class="container mt-5">
+            <h2 class="text-center">Certificats generated</h2>
+            <table class="table table-striped table-bordered mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="certList"></tbody>
+            </table>
+        </div>
+
+        <div id="loading" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p>Génération en cours...</p>
+        </div>
+
+        <script>
+            document.getElementById("generateBtn").addEventListener("click", function (e) {
+                e.preventDefault();
+
+                document.getElementById("loading").style.display = "block";
+
+                const data = {
+                    common_name: document.getElementById("common_name").value,
+                    validity_days: parseInt(document.getElementById("validity_days").value),
+                    key_size: parseInt(document.getElementById("key_size").value),
+                    hash_algorithm: document.getElementById("hash_algorithm").value
+                };
+            
+                fetch('http://127.0.0.1:8000/api/certificates/', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",  
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(data)  
+                })
+                .then(response => response.json())
+                .then(() => {
+                    document.getElementById("loading").style.display = "none";  // Cacher le spinner
+                    fetchCertificates();
+                });
+            });
+
+            function fetchCertificates(){
+                fetch("/api/certificates/")
+                .then(response => response.json())
+                .then(data => {
+                    const certList = document.getElementById("certList");
+                    certList.innerHTML = "";
+                    data.forEach(cert => {
+                        certList.innerHTML += `
+                            <tr>
+                                <td>${cert.id}</td>
+                                <td>${cert.common_name}</td>
+                                <td><a href="/api/certificates/${cert.id}/download/">Download</a></td>
+                            </tr>
+                        `;
+                    });
+                });
+            }
+
+            fetchCertificates();
+        </script>
+    </body>
+</html>
