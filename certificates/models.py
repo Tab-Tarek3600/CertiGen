@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 
 class CertificateRequest(models.Model):
     common_name = models.CharField(max_length=255)
@@ -11,3 +13,6 @@ class CertificateRequest(models.Model):
 
     def __str__(self):
         return f"Cert {self.common_name} ({self.validity_days} jours)"
+    
+    def is_expired(self):
+        return self.created_at + timedelta(days=self.validity_days) < timezone.now()

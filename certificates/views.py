@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from rest_framework.parsers import JSONParser
+from rest_framework.decorators import action
 
 class CertificateRequestViewSet(viewsets.ModelViewSet):
     queryset = CertificateRequest.objects.all()
@@ -47,6 +48,17 @@ class CertificateRequestViewSet(viewsets.ModelViewSet):
         )
 
         return Response(CertuficateRequestSerializer(cert).data, status=status.HTTP_201_CREATED)
+
+    
+    @action(detail=True, methods=["delete"])
+    def  delete_if_expired(self, request, pk=None):
+        cert = self.get_object()
+        if cert.is_expired():
+            cert.delete()
+            return Response({"message":"Certificat deleted successfuly"}, status=200)
+        else:
+            return Response({"error":"The cerificat didn't expired yet"}, status=400)
+
     
 def download_certificate(request, cert_id):
     cert = get_object_or_404(CertificateRequest, id=cert_id)

@@ -49,7 +49,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Action</th>
+                        <th>Action-1</th>
+                        <th>Action-2</th>
                     </tr>
                 </thead>
                 <tbody id="certList"></tbody>
@@ -102,13 +103,32 @@
                             <tr>
                                 <td>${cert.id}</td>
                                 <td>${cert.common_name}</td>
-                                <td><a href="/api/certificates/${cert.id}/download/">Download</a></td>
+                                <td>
+                                    <a href="/api/certificates/${cert.id}/download/">Download</a>
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteCertIfExpired(${cert.id})">Delet</button>
+                                </td>
                             </tr>
                         `;
                     });
                 });
             }
 
+            function deleteCertIfExpired(certId){
+                fetch(`/api/certificates/${certId}/delete_if_expired`, {
+                    method:"DELETE"
+                })
+                .then(response => {
+                    if (response.ok){
+                        alert("Certificat Deleted");
+                        fetchCertificates();
+                    } else {
+                        response.json().then(data => alert(data.error || "Error when deleting "))
+                    }
+                });
+            }
+            
             fetchCertificates();
         </script>
     </body>
